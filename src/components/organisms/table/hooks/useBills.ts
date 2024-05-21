@@ -6,7 +6,7 @@ import { ReduxState } from '../data-table';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export function useBills(currentPage: number) {
+export function useBills(currentPage: number, searchValue: string) {
   const dispatch = useDispatch();
   const billsSelector = useSelector((state: ReduxState) => state.legislation.bills);
   const totalSelector = useSelector((state: ReduxState) => state.legislation.total);
@@ -16,13 +16,16 @@ export function useBills(currentPage: number) {
     const skip = (currentPage - 1) * limit;
     const fetchData = async function getBills() {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/legislation?limit=${limit}&skip=${skip}`, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+        const response = await fetch(
+          `${apiBaseUrl}/api/legislation?limit=${limit}&skip=${skip}${searchValue ? `&type=${searchValue}` : ''}`,
+          {
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
           },
-        });
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -37,7 +40,7 @@ export function useBills(currentPage: number) {
     };
 
     fetchData();
-  }, [dispatch, currentPage]);
+  }, [dispatch, currentPage, searchValue]);
 
   const { handlePageChange } = usePagination();
 

@@ -8,6 +8,7 @@ import { useFavourites } from '@/components/organisms/table/hooks/useFavourites'
 import { useBills } from '@/components/organisms/table/hooks/useBills';
 import { useSnackbar } from '@/components/organisms/table/hooks/useSnackbar';
 import {
+  Input,
   Button,
   Table,
   TableHead,
@@ -98,11 +99,24 @@ export function DataTable({ currentPage }: { currentPage: number }) {
     handleCloseSnackbar,
   } = useSnackbar();
   const { favourites, handleFavourite } = useFavourites(setSnackbarOpen, setSnackbarMessage);
-  const { bills, total, handlePageChange } = useBills(currentPage);
+  const [searchValue, setSearchValue] = useState('');
+  const { bills, total, handlePageChange } = useBills(currentPage, searchValue);
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+  };
 
   return (
     <div className="w-full">
       <h1 className="my-4 text-4xl">Dashboard</h1>
+      <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter by type"
+          value={searchValue}
+          onChange={(event) => handleSearchChange(event.target.value)}
+          className="max-w-48 lg:max-w-xs"
+        />
+      </div>
       <div className="rounded-md border">
         <DetailsDialog
           open={isDetailsModalOpen}
