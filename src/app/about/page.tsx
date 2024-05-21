@@ -11,7 +11,7 @@ export default function Page() {
         <ul></ul>
         <li>Fetching external API https://api.oireachtas.ie/v1/legislation for retrieving bills</li>
         <li>Using Tailwind CSS for styling</li>
-        <li>Using shadcn component library</li>
+        <li>Using Material UI component library</li>
         <li>Using redux for state management (adding bills, managing favourites)</li>
         <li>Persisting state</li>
         <li>Listing bills in the table, marking bills as favourites</li>

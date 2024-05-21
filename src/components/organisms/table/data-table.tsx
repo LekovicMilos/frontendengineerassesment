@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, MouseEvent } from 'react';
+import React, { useState } from 'react';
 import { StarIcon } from '@heroicons/react/20/solid';
 import { StarIcon as StarOutlinedIcon } from '@heroicons/react/24/outline';
 import DetailsDialog from '@/components/organisms/dialog/details-dialog';
-import { useSelector, useDispatch } from 'react-redux';
-import { addBills, addFavourite, removeFavourite } from '@/redux/slices/legislationSlice';
-import { usePagination } from '@/components/organisms/table/hooks/usePagination';
+import { useFavourites } from '@/components/organisms/table/hooks/useFavourites';
+import { useBills } from '@/components/organisms/table/hooks/useBills';
+import { useSnackbar } from '@/components/organisms/table/hooks/useSnackbar';
 import {
   Button,
   Table,
@@ -24,8 +24,6 @@ import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
-
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type Bill = {
   type: string;
@@ -51,32 +49,8 @@ export type ReduxState = {
 };
 
 export function DataTable({ currentPage }: { currentPage: number }) {
-  const dispatch = useDispatch();
-  const billsSelector = useSelector((state: ReduxState) => state.legislation.bills);
-  const totalSelector = useSelector((state: ReduxState) => state.legislation.total);
-  const favouritesSelector = useSelector((state: ReduxState) => state.legislation.favourites);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isDetailsModalOpen, setIsDetaisModalOpen] = useState(false);
-
-  useEffect(() => {
-    const loadedFavourites = localStorage.getItem('favourites');
-    if (loadedFavourites) {
-      JSON.parse(loadedFavourites).forEach((favourite: Bill) => dispatch(addFavourite(favourite)));
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    localStorage.setItem('favourites', JSON.stringify(favouritesSelector));
-  }, [favouritesSelector]);
-
-  const handleFavourite = (e: MouseEvent, bill: Bill) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const isFavourite = favouritesSelector.some((fav) => fav.uri === bill.uri);
-    dispatch(isFavourite ? removeFavourite(bill) : addFavourite(bill));
-    setSnackbarOpen(true);
-    setSnackbarMessage(isFavourite ? 'Removed from favourites' : 'Added to favourites');
-  };
 
   const columns = [
     { field: 'number', headerName: 'Bill number', width: 90 },
@@ -105,36 +79,6 @@ export function DataTable({ currentPage }: { currentPage: number }) {
     },
   ];
 
-  useEffect(() => {
-    const limit = 10;
-    const skip = (currentPage - 1) * limit;
-    const fetchData = async function getBills() {
-      try {
-        const response = await fetch(`${apiBaseUrl}/api/legislation?limit=${limit}&skip=${skip}`, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        dispatch(addBills(responseData));
-        return responseData;
-      } catch (error) {
-        console.error('Error fetching bills in Home:', error);
-        return [];
-      }
-    };
-
-    fetchData();
-  }, [dispatch, currentPage]);
-
-  const { handlePageChange } = usePagination();
-
   const handleDetailsOpen = (bill: Bill) => {
     setSelectedBill(bill);
     setIsDetaisModalOpen(true);
@@ -145,31 +89,20 @@ export function DataTable({ currentPage }: { currentPage: number }) {
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setTabValue(newValue);
   };
-  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
-  const [snackbarMessage, setSnackbarMessage] = React.useState('');
 
-  const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-
-    setSnackbarOpen(false);
-  };
+  const {
+    snackbarOpen,
+    snackbarMessage,
+    setSnackbarOpen,
+    setSnackbarMessage,
+    handleCloseSnackbar,
+  } = useSnackbar();
+  const { favourites, handleFavourite } = useFavourites(setSnackbarOpen, setSnackbarMessage);
+  const { bills, total, handlePageChange } = useBills(currentPage);
 
   return (
     <div className="w-full">
       <h1 className="my-4 text-4xl">Dashboard</h1>
-      {/* <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter bills..."
-          value={(table.getColumn('type')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => {
-            const filterValue = event.target.value;
-            table.getColumn('type')?.setFilterValue(filterValue);
-          }}
-          className="max-w-48 lg:max-w-xs"
-        />
-      </div> */}
       <div className="rounded-md border">
         <DetailsDialog
           open={isDetailsModalOpen}
@@ -194,7 +127,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {billsSelector.map((bill, i) => (
+                  {bills.map((bill, i) => (
                     <TableRow key={`bill-${i}`} onClick={() => handleDetailsOpen(bill)}>
                       <TableCell>{bill.number}</TableCell>
                       <TableCell>{bill.type}</TableCell>
@@ -207,7 +140,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                           data-testid="favourite-button"
                           onClick={(e) => handleFavourite(e, bill)}
                         >
-                          {favouritesSelector.some((fav) => fav.uri === bill.uri) ? (
+                          {favourites.some((fav) => fav.uri === bill.uri) ? (
                             <StarIcon className="h-4 w-4" />
                           ) : (
                             <StarOutlinedIcon className="h-4 w-4" />
@@ -223,7 +156,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                 // @ts-expect-error: Error
                 onPageChange={handlePageChange}
                 page={currentPage - 1}
-                count={Math.ceil(totalSelector / 10)}
+                count={Math.ceil(total / 10)}
                 rowsPerPage={10}
                 rowsPerPageOptions={[10]}
               />
@@ -239,7 +172,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {favouritesSelector.map((bill, i) => (
+                {favourites.map((bill, i) => (
                   <TableRow key={`bill-${i}`} onClick={() => handleDetailsOpen(bill)}>
                     <TableCell>{bill.number}</TableCell>
                     <TableCell>{bill.type}</TableCell>

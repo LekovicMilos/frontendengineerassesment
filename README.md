@@ -38,7 +38,7 @@ Production url: https://frontendengineerassesment.vercel.app/
 
 - Fetching external API https://api.oireachtas.ie/v1/legislation for retrieving bills
 - Using Tailwind CSS for styling
-- Using shadcn component library
+- Using Material UI component library
 - Using redux for state management (adding bills, managing favourites)
 - Persisting state
 - Listing bills in the table, marking bills as favourites
