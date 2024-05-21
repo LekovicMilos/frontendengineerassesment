@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface DetailsDialogProps {
   open: boolean;
@@ -27,7 +27,6 @@ type Bill = {
 };
 
 const DetailsDialog: React.FC<DetailsDialogProps> = ({ open, onOpenChange, selectedBill }) => {
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -35,14 +34,18 @@ const DetailsDialog: React.FC<DetailsDialogProps> = ({ open, onOpenChange, selec
           <DialogTitle>Bill details</DialogTitle>
           {!selectedBill ? <p>No data</p> : null}
           <DialogDescription>
-          <Tabs defaultValue="english" className="w-[400px]">
-            <TabsList>
-              <TabsTrigger value="english">English</TabsTrigger>
-              <TabsTrigger value="gaeilge">Gaeilge</TabsTrigger>
-            </TabsList>
-            <TabsContent value="english"><div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleEn || "" }} /></TabsContent>
-            <TabsContent value="gaeilge"><div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleGa || "" }} /></TabsContent>
-          </Tabs>
+            <Tabs defaultValue="english" className="w-[400px]">
+              <TabsList>
+                <TabsTrigger value="english">English</TabsTrigger>
+                <TabsTrigger value="gaeilge">Gaeilge</TabsTrigger>
+              </TabsList>
+              <TabsContent value="english">
+                <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleEn || '' }} />
+              </TabsContent>
+              <TabsContent value="gaeilge">
+                <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleGa || '' }} />
+              </TabsContent>
+            </Tabs>
             <span className="text-md mb-2 mt-2 block">
               <span className="font-bold">Bill number:</span> {selectedBill?.number}
             </span>

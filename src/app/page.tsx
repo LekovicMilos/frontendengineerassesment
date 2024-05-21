@@ -2,7 +2,6 @@ import React from 'react';
 import { DataTable } from '@/components/organisms/table/data-table';
 import { Suspense } from 'react';
 
-
 export default function Page({
   searchParams,
 }: {
@@ -13,7 +12,7 @@ export default function Page({
 }) {
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
-  
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-4 lg:px-24">
       <div className="z-10 w-full max-w-5xl flex-col items-center justify-between font-mono text-sm lg:flex">

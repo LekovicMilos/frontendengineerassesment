@@ -31,7 +31,6 @@ export type Bill = {
   longTitleEn: string;
   longTitleGa: string;
   uri: string;
-
 };
 
 export type Data = {
@@ -44,10 +43,10 @@ export type ReduxState = {
     bills: Bill[];
     total: number;
     favourites: Bill[];
-  }
+  };
 };
 
-export function DataTable({ currentPage }: { currentPage: number}) {
+export function DataTable({ currentPage }: { currentPage: number }) {
   const dispatch = useDispatch();
   const billsSelector = useSelector((state: ReduxState) => state.legislation.bills);
   const totalSelector = useSelector((state: ReduxState) => state.legislation.total);
@@ -56,17 +55,28 @@ export function DataTable({ currentPage }: { currentPage: number}) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [isDetailsModalOpen, setIsDetaisModalOpen] = useState(false);
 
+  useEffect(() => {
+    const loadedFavourites = localStorage.getItem('favourites');
+    if (loadedFavourites) {
+      JSON.parse(loadedFavourites).forEach((favourite: Bill) => dispatch(addFavourite(favourite)));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    localStorage.setItem('favourites', JSON.stringify(favouritesSelector));
+  }, [favouritesSelector]);
+
   const handleDelete = (e: MouseEvent, bill: Bill) => {
     e.preventDefault();
     e.stopPropagation();
-    const isFavourite = favouritesSelector.some(fav => fav.uri === bill.uri);
+    const isFavourite = favouritesSelector.some((fav) => fav.uri === bill.uri);
     dispatch(isFavourite ? removeFavourite(bill) : addFavourite(bill));
   };
 
   const columns: ColumnDef<Bill>[] = [
     {
       accessorKey: 'number',
-      header: "Bill number",
+      header: 'Bill number',
       cell: ({ row }) => <div>{row.getValue('number')}</div>,
     },
     {
@@ -88,7 +98,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
-        const isFavourite = favouritesSelector.some(fav => fav.uri === row.original.uri);
+        const isFavourite = favouritesSelector.some((fav) => fav.uri === row.original.uri);
         return (
           <Button
             variant="ghost"
@@ -96,7 +106,11 @@ export function DataTable({ currentPage }: { currentPage: number}) {
             data-testid="delete-button"
             onClick={(e) => handleDelete(e, row.original)}
           >
-            {isFavourite ? <StarIcon className="h-4 w-4" /> : <StarOutlinedIcon className="h-4 w-4" />}
+            {isFavourite ? (
+              <StarIcon className="h-4 w-4" />
+            ) : (
+              <StarOutlinedIcon className="h-4 w-4" />
+            )}
           </Button>
         );
       },
@@ -118,7 +132,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
+
         const responseData = await response.json();
         dispatch(addBills(responseData));
         return responseData;
@@ -126,8 +140,8 @@ export function DataTable({ currentPage }: { currentPage: number}) {
         console.error('Error fetching bills in Home:', error);
         return [];
       }
-    }
-  
+    };
+
     fetchData();
   }, [dispatch, currentPage]);
 
@@ -145,8 +159,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
 
   const filteredData = table.getSortedRowModel().rows;
 
-  const { handlePreviousPage, handleNextPage } =
-    usePagination(totalSelector);
+  const { handlePreviousPage, handleNextPage } = usePagination(totalSelector);
 
   const handleDetailsOpen = (bill: Bill) => {
     setSelectedBill(bill);
@@ -155,7 +168,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
 
   return (
     <div className="w-full">
-      <h1 className="text-4xl my-4">Dashboard</h1>
+      <h1 className="my-4 text-4xl">Dashboard</h1>
       {/* <div className="flex items-center py-4">
         <Input
           placeholder="Filter bills..."

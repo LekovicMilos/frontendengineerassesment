@@ -31,11 +31,11 @@ const Pagination: React.FC<PaginationProps> = ({
         size="sm"
         onClick={handleNextPage}
         disabled={currentPage === totalPages}
-        >
+      >
         Next
       </Button>
     </div>
-  )
+  );
 };
 
 export default Pagination;

@@ -40,6 +40,7 @@ Production url: https://frontendengineerassesment.vercel.app/
 - Using Tailwind CSS for styling
 - Using shadcn component library
 - Using redux for state management (adding bills, managing favourites)
+- Persisting state
 - Listing bills in the table, marking bills as favourites
 - Bill details dialog
 - Responsive design

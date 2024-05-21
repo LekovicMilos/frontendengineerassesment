@@ -1,6 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Bill } from '@/components/organisms/table/data-table';
-const initialState: { bills: Bill[], favourites: Bill[], total: number } = { bills: [], favourites: [], total: 0 };
+const initialState: { bills: Bill[]; favourites: Bill[]; total: number } = {
+  bills: [],
+  favourites: [],
+  total: 0,
+};
 
 const legislationSlice = createSlice({
   name: 'legislation',
@@ -13,9 +17,10 @@ const legislationSlice = createSlice({
     addFavourite: (state, action: PayloadAction<Bill>) => {
       if (!state.favourites.some((bill) => bill.uri === action.payload.uri)) {
         state.favourites.push(action.payload);
-        state.favourites.sort((a: Bill, b: Bill) => a.type.localeCompare(b.type));
       } else {
-        state.favourites = state.favourites.filter((bill: Bill) => bill.type !== action.payload.type);
+        state.favourites = state.favourites.filter(
+          (bill: Bill) => bill.type !== action.payload.type,
+        );
       }
     },
     removeFavourite: (state, action: PayloadAction<Bill>) => {
