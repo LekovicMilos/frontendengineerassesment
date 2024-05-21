@@ -3,8 +3,10 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/organisms/layout/header';
-import { Toaster } from '@/components/ui/toaster';
 import Providers from '@/redux/Provider';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v13-appRouter';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from '../theme';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,13 +24,16 @@ export default function RootLayout({
     <html lang="en">
       <Providers>
         <body className={inter.className}>
-          <div className="grid min-h-screen w-full">
-            <div className="flex flex-col">
-              <Header />
-              {children}
-              <Toaster />
-            </div>
-          </div>
+          <AppRouterCacheProvider>
+            <ThemeProvider theme={theme}>
+              <div className="grid min-h-screen w-full">
+                <div className="flex flex-col">
+                  <Header />
+                  {children}
+                </div>
+              </div>
+            </ThemeProvider>
+          </AppRouterCacheProvider>
         </body>
       </Providers>
     </html>

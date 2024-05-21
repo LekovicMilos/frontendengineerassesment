@@ -3,24 +3,28 @@
 import React, { useState, useEffect, MouseEvent } from 'react';
 import { StarIcon } from '@heroicons/react/20/solid';
 import { StarIcon as StarOutlinedIcon } from '@heroicons/react/24/outline';
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import TableHeader from '@/components/organisms/table/table-header';
 import DetailsDialog from '@/components/organisms/dialog/details-dialog';
-// import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useSelector, useDispatch } from 'react-redux';
 import { addBills, addFavourite, removeFavourite } from '@/redux/slices/legislationSlice';
-import Pagination from '@/components/organisms/table/pagination';
 import { usePagination } from '@/components/organisms/table/hooks/usePagination';
+import {
+  Button,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TablePagination,
+  Box,
+  Snackbar,
+  IconButton,
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import Tab from '@mui/material/Tab';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type Bill = {
@@ -52,7 +56,6 @@ export function DataTable({ currentPage }: { currentPage: number }) {
   const totalSelector = useSelector((state: ReduxState) => state.legislation.total);
   const favouritesSelector = useSelector((state: ReduxState) => state.legislation.favourites);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [isDetailsModalOpen, setIsDetaisModalOpen] = useState(false);
 
   useEffect(() => {
@@ -66,54 +69,39 @@ export function DataTable({ currentPage }: { currentPage: number }) {
     localStorage.setItem('favourites', JSON.stringify(favouritesSelector));
   }, [favouritesSelector]);
 
-  const handleDelete = (e: MouseEvent, bill: Bill) => {
+  const handleFavourite = (e: MouseEvent, bill: Bill) => {
     e.preventDefault();
     e.stopPropagation();
     const isFavourite = favouritesSelector.some((fav) => fav.uri === bill.uri);
     dispatch(isFavourite ? removeFavourite(bill) : addFavourite(bill));
+    setSnackbarOpen(true);
+    setSnackbarMessage(isFavourite ? 'Removed from favourites' : 'Added to favourites');
   };
 
-  const columns: ColumnDef<Bill>[] = [
+  const columns = [
+    { field: 'number', headerName: 'Bill number', width: 90 },
     {
-      accessorKey: 'number',
-      header: 'Bill number',
-      cell: ({ row }) => <div>{row.getValue('number')}</div>,
+      field: 'type',
+      headerName: 'Bill type',
+      width: 150,
+      editable: true,
     },
     {
-      accessorKey: 'type',
-      header: 'Bill type',
-      cell: ({ row }) => <div>{row.getValue('type')}</div>,
+      field: 'status',
+      headerName: 'Bill status',
+      width: 150,
+      editable: true,
     },
     {
-      accessorKey: 'status',
-      header: 'Bill status',
-      cell: ({ row }) => <div>{row.getValue('status')}</div>,
+      field: 'sponsor',
+      headerName: 'Bill sponsor',
+      type: 'number',
+      width: 110,
+      editable: true,
     },
     {
-      accessorKey: 'sponsor',
-      header: 'Bill sponsor',
-      cell: ({ row }) => <div>{row.getValue('sponsor')}</div>,
-    },
-    {
-      id: 'actions',
-      enableHiding: false,
-      cell: ({ row }) => {
-        const isFavourite = favouritesSelector.some((fav) => fav.uri === row.original.uri);
-        return (
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0"
-            data-testid="delete-button"
-            onClick={(e) => handleDelete(e, row.original)}
-          >
-            {isFavourite ? (
-              <StarIcon className="h-4 w-4" />
-            ) : (
-              <StarOutlinedIcon className="h-4 w-4" />
-            )}
-          </Button>
-        );
-      },
+      field: 'actions',
+      headerName: '',
     },
   ];
 
@@ -145,25 +133,27 @@ export function DataTable({ currentPage }: { currentPage: number }) {
     fetchData();
   }, [dispatch, currentPage]);
 
-  const table = useReactTable({
-    data: billsSelector,
-    columns,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      columnFilters,
-    },
-  });
-
-  const filteredData = table.getSortedRowModel().rows;
-
-  const { handlePreviousPage, handleNextPage } = usePagination(totalSelector);
+  const { handlePageChange } = usePagination();
 
   const handleDetailsOpen = (bill: Bill) => {
     setSelectedBill(bill);
     setIsDetaisModalOpen(true);
+  };
+
+  const [tabValue, setTabValue] = React.useState('bills');
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setTabValue(newValue);
+  };
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [snackbarMessage, setSnackbarMessage] = React.useState('');
+
+  const handleCloseSnackbar = (event: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSnackbarOpen(false);
   };
 
   return (
@@ -183,47 +173,112 @@ export function DataTable({ currentPage }: { currentPage: number }) {
       <div className="rounded-md border">
         <DetailsDialog
           open={isDetailsModalOpen}
-          onOpenChange={() => setIsDetaisModalOpen(!isDetailsModalOpen)}
+          onOpenChange={() => setIsDetaisModalOpen(false)}
           selectedBill={selectedBill}
         />
-        <Table>
-          <TableHeader
-            headerGroups={table.getHeaderGroups()}
-            flexRender={(header, context) => flexRender(header, context) as JSX.Element}
-          />
-          <TableBody>
-            {filteredData.length ? (
-              filteredData.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  onClick={() => handleDetailsOpen(row.original)}
-                  className="cursor-pointer"
-                >
-                  {row.getVisibleCells().map((cell, index) => (
-                    <TableCell
-                      key={cell.id}
-                      className={index === row.getVisibleCells().length - 1 ? 'text-right' : ''}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+        <TabContext value={tabValue}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <TabList onChange={handleTabChange} aria-label="Bills or favourites">
+              <Tab label="Bills" value="bills" />
+              <Tab label="Favourites" value="favourites" />
+            </TabList>
+          </Box>
+          <TabPanel value="bills">
+            <Box>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    {columns.map((column, i) => (
+                      <TableCell key={`column-${i}`}>{column.headerName}</TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {billsSelector.map((bill, i) => (
+                    <TableRow key={`bill-${i}`} onClick={() => handleDetailsOpen(bill)}>
+                      <TableCell>{bill.number}</TableCell>
+                      <TableCell>{bill.type}</TableCell>
+                      <TableCell>{bill.status}</TableCell>
+                      <TableCell>{bill.sponsor}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="text"
+                          className="h-8 w-8 p-0"
+                          data-testid="favourite-button"
+                          onClick={(e) => handleFavourite(e, bill)}
+                        >
+                          {favouritesSelector.some((fav) => fav.uri === bill.uri) ? (
+                            <StarIcon className="h-4 w-4" />
+                          ) : (
+                            <StarOutlinedIcon className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                component="div"
+                // @ts-expect-error: Error
+                onPageChange={handlePageChange}
+                page={currentPage - 1}
+                count={Math.ceil(totalSelector / 10)}
+                rowsPerPage={10}
+                rowsPerPageOptions={[10]}
+              />
+            </Box>
+          </TabPanel>
+          <TabPanel value="favourites">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {columns.map((column, i) => (
+                    <TableCell key={`column-${i}`}>{column.headerName}</TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              </TableHead>
+              <TableBody>
+                {favouritesSelector.map((bill, i) => (
+                  <TableRow key={`bill-${i}`} onClick={() => handleDetailsOpen(bill)}>
+                    <TableCell>{bill.number}</TableCell>
+                    <TableCell>{bill.type}</TableCell>
+                    <TableCell>{bill.status}</TableCell>
+                    <TableCell>{bill.sponsor}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="text"
+                        className="h-8 w-8 p-0"
+                        data-testid="favourite-button"
+                        onClick={(e) => handleFavourite(e, bill)}
+                      >
+                        <StarIcon className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabPanel>
+        </TabContext>
       </div>
-      <Pagination
-        totalPages={Math.ceil(totalSelector / 10)}
-        handlePreviousPage={handlePreviousPage}
-        handleNextPage={handleNextPage}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message={snackbarMessage}
+        action={
+          <React.Fragment>
+            <IconButton
+              size="small"
+              aria-label="close"
+              color="inherit"
+              onClick={handleCloseSnackbar}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </React.Fragment>
+        }
       />
     </div>
   );

@@ -1,14 +1,11 @@
 'use client';
 
 import React from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogHeader,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogTitle, DialogContent, Box } from '@mui/material';
+import Tab from '@mui/material/Tab';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
 
 interface DetailsDialogProps {
   open: boolean;
@@ -27,39 +24,43 @@ type Bill = {
 };
 
 const DetailsDialog: React.FC<DetailsDialogProps> = ({ open, onOpenChange, selectedBill }) => {
+  const [value, setValue] = React.useState('english');
+
+  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    setValue(newValue);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onClose={onOpenChange}>
+      <DialogTitle>Bill details</DialogTitle>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Bill details</DialogTitle>
-          {!selectedBill ? <p>No data</p> : null}
-          <DialogDescription>
-            <Tabs defaultValue="english" className="w-[400px]">
-              <TabsList>
-                <TabsTrigger value="english">English</TabsTrigger>
-                <TabsTrigger value="gaeilge">Gaeilge</TabsTrigger>
-              </TabsList>
-              <TabsContent value="english">
-                <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleEn || '' }} />
-              </TabsContent>
-              <TabsContent value="gaeilge">
-                <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleGa || '' }} />
-              </TabsContent>
-            </Tabs>
-            <span className="text-md mb-2 mt-2 block">
-              <span className="font-bold">Bill number:</span> {selectedBill?.number}
-            </span>
-            <span className="text-md mb-2 block">
-              <span className="font-bold">Type:</span> #{selectedBill?.type}
-            </span>
-            <span className="text-md mb-2 block">
-              <span className="font-bold">Status:</span> {selectedBill?.status}
-            </span>
-            <span className="text-md mb-2 block">
-              <span className="font-bold">Sponsor:</span> {selectedBill?.sponsor}
-            </span>
-          </DialogDescription>
-        </DialogHeader>
+        {!selectedBill ? <p>No data</p> : null}
+        <TabContext value={value}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <TabList onChange={handleChange} aria-label="English or Gaeilge title">
+              <Tab label="English" value="english" />
+              <Tab label="Gaeilge" value="gaeilge" />
+            </TabList>
+          </Box>
+          <TabPanel value="english">
+            <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleEn || '' }} />
+          </TabPanel>
+          <TabPanel value="gaeilge">
+            <div dangerouslySetInnerHTML={{ __html: selectedBill?.longTitleGa || '' }} />
+          </TabPanel>
+        </TabContext>
+        <span className="text-md mb-2 mt-2 block">
+          <span className="font-bold">Bill number:</span> {selectedBill?.number}
+        </span>
+        <span className="text-md mb-2 block">
+          <span className="font-bold">Type:</span> #{selectedBill?.type}
+        </span>
+        <span className="text-md mb-2 block">
+          <span className="font-bold">Status:</span> {selectedBill?.status}
+        </span>
+        <span className="text-md mb-2 block">
+          <span className="font-bold">Sponsor:</span> {selectedBill?.sponsor}
+        </span>
       </DialogContent>
     </Dialog>
   );
