@@ -1,6 +1,5 @@
 'use client';
 
-// Pagination.tsx
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useSearchParams } from 'next/navigation';

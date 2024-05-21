@@ -18,7 +18,6 @@ const TableHeader: React.FC<TableHeaderProps> = ({ headerGroups, flexRender }) =
       {headerGroups.map((headerGroup) => (
         <TableRow key={headerGroup.id}>
           {headerGroup.headers.map((header: any) => {
-            // Add type annotation to 'header' parameter
             return (
               <TableHead key={header.id}>
                 {header.isPlaceholder

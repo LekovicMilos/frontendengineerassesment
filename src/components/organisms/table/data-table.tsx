@@ -155,7 +155,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
 
   return (
     <div className="w-full">
-      <h1 className="text-4xl">Dashboard</h1>
+      <h1 className="text-4xl my-4">Dashboard</h1>
       {/* <div className="flex items-center py-4">
         <Input
           placeholder="Filter bills..."
@@ -208,7 +208,7 @@ export function DataTable({ currentPage }: { currentPage: number}) {
         </Table>
       </div>
       <Pagination
-        totalPages={totalSelector / 10}
+        totalPages={Math.ceil(totalSelector / 10)}
         handlePreviousPage={handlePreviousPage}
         handleNextPage={handleNextPage}
       />
