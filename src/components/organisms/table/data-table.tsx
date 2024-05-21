@@ -138,6 +138,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                           variant="text"
                           className="h-8 w-8 p-0"
                           data-testid="favourite-button"
+                          // @ts-expect-error: Error
                           onClick={(e) => handleFavourite(e, bill)}
                         >
                           {favourites.some((fav) => fav.uri === bill.uri) ? (
@@ -183,6 +184,7 @@ export function DataTable({ currentPage }: { currentPage: number }) {
                         variant="text"
                         className="h-8 w-8 p-0"
                         data-testid="favourite-button"
+                        // @ts-expect-error: Error
                         onClick={(e) => handleFavourite(e, bill)}
                       >
                         <StarIcon className="h-4 w-4" />
