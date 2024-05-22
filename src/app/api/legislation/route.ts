@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const limit = Number(request.nextUrl.searchParams.get('limit')) || 10;
-  const skip = Number(request.nextUrl.searchParams.get('skip')) || 0;
-  const type = request.nextUrl.searchParams.get('type');
-
-  // Fetch all data from the external API
-  const res = await fetch(`https://api.oireachtas.ie/v1/legislation`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  const limit = request.nextUrl.searchParams.get('limit') || '10';
+  const skip = request.nextUrl.searchParams.get('skip') || '0';
+  const bill_status = request.nextUrl.searchParams.get('bill_status') || '';
+  const bill_no = request.nextUrl.searchParams.get('bill_no') || '';
+  const res = await fetch(
+    `https://api.oireachtas.ie/v1/legislation?limit=${limit}&skip=${skip}${bill_status ? `&bill_status=${bill_status}` : bill_no && `&bill_no=${bill_no}`}`,
+    {
+      // Update the fetch URL with the limit and skip parameters
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
     },
-  });
+  );
   const responseData = await res.json();
   // @ts-expect-error: Error
-  let bills = responseData.results.map((item) => item.bill);
-
-  if (type) {
-    // @ts-expect-error: Error
-    bills = bills.filter((bill) => bill.billType.toLowerCase().includes(type.toLowerCase()));
-  }
+  const bills = responseData.results.map((item) => item.bill);
 
   let simplifiedBills = [];
   if (bills && Array.isArray(bills)) {
@@ -40,10 +38,8 @@ export async function GET(request: NextRequest) {
   } else {
     simplifiedBills = bills;
   }
-
-  const paginatedBills = simplifiedBills.slice(skip, skip + limit);
   const response = {
-    bills: paginatedBills,
+    bills: simplifiedBills,
     total: responseData.head.counts.billCount,
   };
   return NextResponse.json(response);

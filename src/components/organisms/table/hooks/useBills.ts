@@ -6,7 +6,8 @@ import { ReduxState } from '../data-table';
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export function useBills(currentPage: number, searchValue: string) {
+export function useBills(currentPage: number, searchValue: { field: string; value: string }) {
+  const { field, value } = searchValue;
   const dispatch = useDispatch();
   const billsSelector = useSelector((state: ReduxState) => state.legislation.bills);
   const totalSelector = useSelector((state: ReduxState) => state.legislation.total);
@@ -17,7 +18,7 @@ export function useBills(currentPage: number, searchValue: string) {
     const fetchData = async function getBills() {
       try {
         const response = await fetch(
-          `${apiBaseUrl}/api/legislation?limit=${limit}&skip=${skip}${searchValue ? `&type=${searchValue}` : ''}`,
+          `${apiBaseUrl}/api/legislation?limit=${limit}&skip=${skip}${searchValue ? `&${field}=${value}` : ''}`,
           {
             method: 'GET',
             headers: {

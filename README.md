@@ -47,4 +47,4 @@ Production url: https://frontendengineerassesment.vercel.app/
 - Using Eslint and Prettier for code quality and consistency
 - Using @heroicons/react for icons
 - Pagination
-- Filtering by type
+- Filtering by bill number and status

@@ -20,7 +20,7 @@ export default function Page() {
         <li>Using Eslint and Prettier for code quality and consistency</li>
         <li>Using @heroicons/react for icons</li>
         <li>Pagination</li>
-        <li>Filtering by type</li>
+        <li>Filtering by bill number and status</li>
       </div>
     </main>
   );

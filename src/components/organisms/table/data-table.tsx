@@ -7,6 +7,7 @@ import DetailsDialog from '@/components/organisms/dialog/details-dialog';
 import { useFavourites } from '@/components/organisms/table/hooks/useFavourites';
 import { useBills } from '@/components/organisms/table/hooks/useBills';
 import { useSnackbar } from '@/components/organisms/table/hooks/useSnackbar';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import {
   Input,
   Button,
@@ -19,7 +20,12 @@ import {
   Box,
   Snackbar,
   IconButton,
+  FormControl,
+  Typography,
+  MenuItem,
+  Select,
 } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
 import CloseIcon from '@mui/icons-material/Close';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
@@ -52,6 +58,16 @@ export type ReduxState = {
 export function DataTable({ currentPage }: { currentPage: number }) {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [isDetailsModalOpen, setIsDetaisModalOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const billStatusParam = searchParams.get('bill_status') || '';
+  const billNumberParam = searchParams.get('bill_no') || '';
+  const [filterField, setFilterField] = React.useState(billStatusParam ? 'bill_status' : 'bill_no');
+
+  const handleFilterFieldChange = (event: SelectChangeEvent) => {
+    setFilterField(event.target.value as string);
+    setSearchValue({ field: event.target.value, value: '' });
+    replace(`${pathname}?page=${1}`);
+  };
 
   const columns = [
     { field: 'number', headerName: 'Bill number', width: 90 },
@@ -98,25 +114,25 @@ export function DataTable({ currentPage }: { currentPage: number }) {
     setSnackbarMessage,
     handleCloseSnackbar,
   } = useSnackbar();
-  const { favourites, handleFavourite } = useFavourites(setSnackbarOpen, setSnackbarMessage);
-  const [searchValue, setSearchValue] = useState('');
-  const { bills, total, handlePageChange } = useBills(currentPage, searchValue);
 
+  const { favourites, handleFavourite } = useFavourites(setSnackbarOpen, setSnackbarMessage);
+  const [searchValue, setSearchValue] = useState({
+    field: billStatusParam ? 'bill_status' : 'bill_no',
+    value: billStatusParam ? billStatusParam : billNumberParam ?? '',
+  });
+  const { bills, total, handlePageChange } = useBills(currentPage, searchValue);
+  const pathname = usePathname();
+  const { replace } = useRouter();
   const handleSearchChange = (value: string) => {
-    setSearchValue(value);
+    setSearchValue((prevState) => ({ ...prevState, value }));
+    replace(
+      `${pathname}?page=${1}${searchValue.field === 'bill_status' ? `&bill_status=${value}` : ''}${searchValue.field === 'bill_no' ? `&bill_no=${value}` : ''}`,
+    );
   };
 
   return (
     <div className="w-full">
       <h1 className="my-4 text-4xl">Dashboard</h1>
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter by type"
-          value={searchValue}
-          onChange={(event) => handleSearchChange(event.target.value)}
-          className="max-w-48 lg:max-w-xs"
-        />
-      </div>
       <div className="rounded-md border">
         <DetailsDialog
           open={isDetailsModalOpen}
@@ -132,6 +148,38 @@ export function DataTable({ currentPage }: { currentPage: number }) {
           </Box>
           <TabPanel value="bills">
             <Box>
+              <div className="flex items-center py-4">
+                <Box sx={{ minWidth: 120 }}>
+                  <FormControl fullWidth variant="standard">
+                    <Input
+                      placeholder="Filter by"
+                      value={searchValue.value}
+                      onChange={(event) => handleSearchChange(event.target.value)}
+                      className="mr-4 max-w-48 lg:max-w-xs"
+                    />
+                  </FormControl>
+                </Box>
+                <Box sx={{ minWidth: 120, marginRight: 2 }}>
+                  <FormControl fullWidth variant="standard">
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={filterField}
+                      label="Filter field"
+                      onChange={handleFilterFieldChange}
+                      defaultValue="bill_no"
+                    >
+                      <MenuItem value="bill_no">Number</MenuItem>
+                      <MenuItem value="bill_status">Status</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                {filterField === 'bill_status' ? (
+                  <Typography variant="caption">
+                    Status can be Current, Withdrawn, Enacted, Rejected, Defeated or Lapsed
+                  </Typography>
+                ) : null}
+              </div>
               <Table>
                 <TableHead>
                   <TableRow>
